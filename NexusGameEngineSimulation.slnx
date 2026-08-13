@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="NexusGameEngine.API/NexusGameEngine.API.csproj" />
+    <Project Path="NexusGameEngine.Application/NexusGameEngine.Application.csproj" />
+    <Project Path="NexusGameEngine.Domain/NexusGameEngine.Domain.csproj" />
+    <Project Path="NexusGameEngine.Infrastructure/NexusGameEngine.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/testing/">
+    <Project Path="NexusGameEngineApplication.Tests/NexusGameEngineApplication.Tests.csproj" />
+    <Project Path="NexusGameEngineDomain.Tests/NexusGameEngineDomain.Tests.csproj" />
+  </Folder>
+</Solution>
