@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using NexusGameEngine.Application.Behavior;
 
 namespace NexusGameEngine.Application;
 
@@ -13,7 +14,7 @@ public static class DependencyInjection
         services.AddMediatR(configuration =>
         {
             configuration.RegisterServicesFromAssemblies(assembly);
-            configuration.AddOpenBehavior(typeof(ValidationBehaviour<,>));
+            configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(assembly);
