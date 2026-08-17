@@ -6,7 +6,7 @@ using NexusGameEngine.Domain.ResultPattern;
 
 namespace NexusGameEngine.Application.Behavior;
 
-public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators, ILogger<ValidationBehavior<TRequest, TResponse>> log)
+public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
 : IPipelineBehavior<TRequest, TResponse>
 where TRequest : IRequest<TResponse>
 {
