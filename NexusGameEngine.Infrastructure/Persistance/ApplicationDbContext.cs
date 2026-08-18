@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NexusGameEngine.Application.Interfaces;
+using NexusGameEngine.Domain.Entities;
 
 namespace NexusGameEngine.Infrastructure.Persistance;
 

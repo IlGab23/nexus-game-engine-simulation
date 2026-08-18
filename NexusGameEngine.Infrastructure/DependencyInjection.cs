@@ -1,7 +1,11 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NexusGameEngine.Application.Interfaces;
+using NexusGameEngine.Application.Interfaces.Security;
 using NexusGameEngine.Infrastructure.Persistance;
+using NexusGameEngine.Infrastructure.Security;
 
 namespace NexusGameEngine.Infrastructure;
 
@@ -20,6 +24,10 @@ public static class DependencyInjection
                 );
             });
         });
+
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }
