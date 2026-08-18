@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-
+using NexusGameEngine.Domain.Entities;
 namespace NexusGameEngine.Application.Interfaces;
 
 public interface IApplicationDbContext
