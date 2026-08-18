@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NexusGameEngine.Application.Interfaces;
+using NexusGameEngine.Application.Interfaces.Security;
 using NexusGameEngine.Domain.Entities.ValueObjects;
 using NexusGameEngine.Domain.ResultPattern;
 using DomainUser = NexusGameEngine.Domain.Entities.User;
@@ -8,7 +9,7 @@ using DomainUser = NexusGameEngine.Domain.Entities.User;
 namespace NexusGameEngine.Application.Features.User.Commands;
 
 
-public class RegisterUserHandler(IApplicationDbContext appDbContext) : IRequestHandler<RegisterUserCommand, Result<RegistrationOutput>>
+public class RegisterUserHandler(IApplicationDbContext appDbContext, IPasswordHasher passwordHasher) : IRequestHandler<RegisterUserCommand, Result<RegistrationOutput>>
 {
     public async Task<Result<RegistrationOutput>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
@@ -16,7 +17,7 @@ public class RegisterUserHandler(IApplicationDbContext appDbContext) : IRequestH
         var emailResult = Email.Create(request.Email);
         if (emailResult.IsFailure) return emailResult.ErrorList;
 
-        string hashedPassword = request.Password; //Hashing System: W.I.P.
+        string hashedPassword = await passwordHasher.HashPassword(request.Password);
 
         var userResult = DomainUser.Create(request.UserName, emailResult.Value, hashedPassword);
         if (userResult.IsFailure) return userResult.ErrorList;
