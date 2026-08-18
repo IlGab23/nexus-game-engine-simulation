@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NexusGameEngine.Application.Interfaces;
 using NexusGameEngine.Infrastructure.Persistance;
 
 namespace NexusGameEngine.Infrastructure;
@@ -20,6 +21,8 @@ public static class DependencyInjection
                 );
             });
         });
+
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         return services;
     }
