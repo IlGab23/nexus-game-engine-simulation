@@ -1,10 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using NexusGameEngine.Application.Interfaces.Security;
 
 namespace NexusGameEngine.Infrastructure.Security;
 
-public class RefreshTokenProvider : IRefreshTokenProvider
+public class RefreshTokenProvider(IConfiguration config) : IRefreshTokenProvider
 {
     public byte[] CalculateHash(string plainTextToken)
     {
@@ -30,5 +31,11 @@ public class RefreshTokenProvider : IRefreshTokenProvider
     public string ConvertToString(byte[] hashBytes)
     {
         return Convert.ToBase64String(hashBytes);
+    }
+
+    public DateTimeOffset GetExpiryTime(TimeProvider timeProvider)
+    {
+        int days = int.Parse(config["RT:ExpiryInDays"] ?? "7");
+        return timeProvider.GetUtcNow().AddDays(days);
     }
 }

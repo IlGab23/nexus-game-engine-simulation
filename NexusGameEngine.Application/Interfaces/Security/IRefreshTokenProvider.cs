@@ -6,4 +6,5 @@ public interface IRefreshTokenProvider
     bool Verify(string plainTextToken, string hash);
     byte[] CalculateHash(string plainTextToken);
     string ConvertToString(byte[] hashBytes);
+    DateTimeOffset GetExpiryTime(TimeProvider timeProvider);
 }
