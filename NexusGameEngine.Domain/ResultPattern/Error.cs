@@ -12,4 +12,6 @@ public record Error(string Name, string Description, ErrorType Type, string[]? D
     public static Error Conflict(string Name, string Description, string[]? Details = null) => new(Name, Description, ErrorType.Conflict, Details);
     public static Error RegistrationEmailExist => new("User.DuplicateEmail", "This email is arleady registered", ErrorType.Conflict);
     public static Error LoginWrongCredentials => new("User.WrongCredentials", "The email or password are wrong", ErrorType.Conflict);
+    public static Error RefreshTokenCompromised => new("RefreshToken.Stolen", "RefreshToken is already been revoked, all tokens have been revoked", ErrorType.Failure);
+    public static Error RefreshTokenExpired => new("RefreshToken.Expired", "RefreshToken is expired", ErrorType.Failure);
 }
