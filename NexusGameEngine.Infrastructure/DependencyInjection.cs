@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using NexusGameEngine.Application.Interfaces;
 using NexusGameEngine.Application.Interfaces.Security;
+using NexusGameEngine.Domain.Constants;
+using NexusGameEngine.Domain.Entities;
 using NexusGameEngine.Infrastructure.Persistance;
 using NexusGameEngine.Infrastructure.Security;
 
@@ -47,7 +48,19 @@ public static class DependencyInjection
                 opz.MapInboundClaims = false;
             });
 
-        services.AddAuthorization();
+        services.AddAuthorizationBuilder()
+            .AddPolicy("PlayerPol", pol =>
+            {
+                pol.RequireRole(SystemRoleNames.Player,
+                SystemRoleNames.PlayerPlus,
+                SystemRoleNames.Admin);
+            })
+            .AddPolicy("PlayerPlusPol", pol =>
+            {
+                pol.RequireRole(SystemRoleNames.PlayerPlus,
+                SystemRoleNames.Admin);
+            })
+            .AddPolicy("AdminPol", pol => pol.RequireRole(SystemRoleNames.Admin));
 
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
