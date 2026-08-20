@@ -18,6 +18,11 @@ public class JwtTokenProvider(IConfiguration config, TimeProvider timeProvider) 
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
+        if (user.SystemRoleId is not null)
+            claims.Add(new(ClaimTypes.Role, user.SystemRole!.Name));
+        else
+            claims.Add(new(ClaimTypes.Role, "NoRole"));
+
         var secretKey = config["Jwt:SecretKey"] ?? throw new InvalidOperationException("Jwt:SecretKey: Missing in configuration file");
         var securityKey = new SymmetricSecurityKey(Convert.FromBase64String(secretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512);
