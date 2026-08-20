@@ -2,6 +2,7 @@ using NexusGameEngine.API.Endpoints;
 using NexusGameEngine.Application;
 using NexusGameEngine.Infrastructure;
 using NexusGameEngine.Infrastructure.Exceptions;
+using NexusGameEngine.Infrastructure.Persistance.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
+
+    await seeder.InitializeDatabaseAsync(CancellationToken.None);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

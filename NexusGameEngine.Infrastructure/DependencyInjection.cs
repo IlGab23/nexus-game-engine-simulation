@@ -8,6 +8,7 @@ using NexusGameEngine.Application.Interfaces.Security;
 using NexusGameEngine.Domain.Constants;
 using NexusGameEngine.Domain.Entities;
 using NexusGameEngine.Infrastructure.Persistance;
+using NexusGameEngine.Infrastructure.Persistance.Seeding;
 using NexusGameEngine.Infrastructure.Security;
 
 namespace NexusGameEngine.Infrastructure;
@@ -51,19 +52,20 @@ public static class DependencyInjection
         services.AddAuthorizationBuilder()
             .AddPolicy("PlayerPol", pol =>
             {
-                pol.RequireRole(SystemRoleNames.Player,
-                SystemRoleNames.PlayerPlus,
-                SystemRoleNames.Admin);
+                pol.RequireRole(SystemRoleNames.Player.Name,
+                SystemRoleNames.PlayerPlus.Name,
+                SystemRoleNames.Admin.Name);
             })
             .AddPolicy("PlayerPlusPol", pol =>
             {
-                pol.RequireRole(SystemRoleNames.PlayerPlus,
-                SystemRoleNames.Admin);
+                pol.RequireRole(SystemRoleNames.PlayerPlus.Name,
+                SystemRoleNames.Admin.Name);
             })
-            .AddPolicy("AdminPol", pol => pol.RequireRole(SystemRoleNames.Admin));
+            .AddPolicy("AdminPol", pol => pol.RequireRole(SystemRoleNames.Admin.Name));
 
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();
