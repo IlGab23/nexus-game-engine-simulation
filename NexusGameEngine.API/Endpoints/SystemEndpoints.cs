@@ -9,5 +9,8 @@ public static class SystemEndpoints
 
         group.MapGet("/ping", async () => Results.Ok("PONG!"));
 
+        group.MapGet("/admin-ping", async () => Results.Ok("ADMIN PONG!"))
+             .RequireAuthorization("AdminPol");
+
     }
 }
