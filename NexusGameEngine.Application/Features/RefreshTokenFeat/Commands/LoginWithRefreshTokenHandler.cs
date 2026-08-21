@@ -16,7 +16,10 @@ public class LoginWithRefreshTokenHandler(IApplicationDbContext appDbContext, IJ
         string oldTokenHash = refreshTokenProvider.ConvertToString(refreshTokenProvider.CalculateHash(request.OldRefreshToken));
         RefreshToken? oldDbToken = await appDbContext.RefreshTokens.FirstOrDefaultAsync(rt => rt.TokenHash == oldTokenHash, cancellationToken);
         if (oldDbToken is null) return Error.NotFound("RefreshToken.NotFound", "Request refresh token not found");
-        DomainUser user = await appDbContext.Users.FirstAsync(u => u.Id == oldDbToken.UserId, cancellationToken);
+        DomainUser user = await appDbContext.Users
+                                .AsNoTracking()
+                                .Include(u => u.SystemRole)
+                                .FirstAsync(u => u.Id == oldDbToken.UserId, cancellationToken);
 
         if (!oldDbToken.IsActive(timeProvider))
         {
