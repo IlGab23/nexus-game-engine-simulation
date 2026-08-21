@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using NexusGameEngine.Application.Interfaces;
 using NexusGameEngine.Application.Interfaces.Security;
+using NexusGameEngine.Domain.Constants;
+using NexusGameEngine.Domain.Entities;
 using NexusGameEngine.Infrastructure.Persistance;
+using NexusGameEngine.Infrastructure.Persistance.Seeding;
 using NexusGameEngine.Infrastructure.Security;
 
 namespace NexusGameEngine.Infrastructure;
@@ -47,10 +49,23 @@ public static class DependencyInjection
                 opz.MapInboundClaims = false;
             });
 
-        services.AddAuthorization();
+        services.AddAuthorizationBuilder()
+            .AddPolicy("PlayerPol", pol =>
+            {
+                pol.RequireRole(SystemRoleNames.Player.Name,
+                SystemRoleNames.PlayerPlus.Name,
+                SystemRoleNames.Admin.Name);
+            })
+            .AddPolicy("PlayerPlusPol", pol =>
+            {
+                pol.RequireRole(SystemRoleNames.PlayerPlus.Name,
+                SystemRoleNames.Admin.Name);
+            })
+            .AddPolicy("AdminPol", pol => pol.RequireRole(SystemRoleNames.Admin.Name));
 
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();

@@ -12,7 +12,9 @@ public class LoginUserHandler(IApplicationDbContext appDbContext, IJwtTokenProvi
 {
     public async Task<Result<LoginCommandOutput>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
-        DomainUser? user = await appDbContext.Users.FirstOrDefaultAsync(u => u.Email.Value == request.Email, cancellationToken);
+        DomainUser? user = await appDbContext.Users.AsNoTracking()
+                            .Include(u => u.SystemRole)
+                            .FirstOrDefaultAsync(u => u.Email.Value == request.Email, cancellationToken);
 
         if (user is null) return Error.LoginWrongCredentials;
 
