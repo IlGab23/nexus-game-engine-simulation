@@ -7,6 +7,9 @@ namespace NexusGameEngine.Infrastructure.Security;
 
 public sealed class PasswordHasher : IPasswordHasher
 {
+
+    private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(4, 4);
+
     private static byte[] GenerateSalt()
     {
         var buffer = new byte[16];
@@ -16,15 +19,25 @@ public sealed class PasswordHasher : IPasswordHasher
 
     private static async Task<byte[]> GenerateHashAsync(byte[] salt, string password)
     {
-        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-        using var argon2 = new Argon2id(passwordBytes)
+        await _semaphore.WaitAsync();
+
+        try
         {
-            Salt = salt,
-            DegreeOfParallelism = 1,
-            MemorySize = 1024 * 64,
-            Iterations = 3
-        };
-        return await argon2.GetBytesAsync(32);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+            using var argon2 = new Argon2id(passwordBytes)
+            {
+                Salt = salt,
+                DegreeOfParallelism = 1,
+                MemorySize = 1024 * 64,
+                Iterations = 3
+            };
+            return await argon2.GetBytesAsync(32);
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+
     }
 
     public async Task<string> HashPassword(string password)
