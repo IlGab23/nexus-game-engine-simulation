@@ -106,5 +106,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapSystemEndpoints();
+app.MapAuthEndpoints();
+app.MapPlayerEndpoints();
 
 app.Run();

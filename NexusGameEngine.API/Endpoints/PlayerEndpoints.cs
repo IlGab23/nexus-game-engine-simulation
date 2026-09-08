@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using MediatR;
 using NexusGameEngine.Application.Features.Player.Queries;
+using NexusGameEngine.Domain.ResultPattern;
 
 namespace NexusGameEngine.API.Endpoints;
 
@@ -28,7 +29,13 @@ public static class PlayerEndpoints
                 return Results.Ok(result.Value);
             }
 
-            return Results.NotFound(result.ErrorList);
+            var errorType = result.ErrorList.FirstOrDefault()?.Type;
+
+            return errorType switch
+            {
+                ErrorType.NotFound => Results.NotFound(result.ErrorList),
+                _ => Results.BadRequest(result.ErrorList)
+            };
         });
     }
 }
