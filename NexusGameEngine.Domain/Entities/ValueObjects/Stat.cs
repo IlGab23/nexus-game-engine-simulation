@@ -3,25 +3,24 @@ using NexusGameEngine.Domain.ResultPattern;
 
 namespace NexusGameEngine.Domain.Entities.ValueObjects;
 
-public sealed record Stat
+public readonly record struct Stat
 {
     private const int BASE_EXPERIENCE_TO_LEVEL = 2000;
     private const double XP_CURVE_EXPONENT = 1.5;
     private const byte MAX_LEVEL = 100;
 
     public string Name { get; init; }
-    public int Experience { get; private set; }
-    private int experienceCapForNextLevel;
-    public byte Level { get; private set; }
+    public int Experience { get; init; }
+    public byte Level { get; init; }
 
     public bool CanAddXp => Level < MAX_LEVEL;
+    public int ExperienceCapForNextLevel => GetExpCapForNextLevel(Level);
 
     private Stat(string name)
     {
         Name = name;
         Experience = 0;
         Level = 0;
-        experienceCapForNextLevel = GetExpCapForNextLevel();
     }
 
     private Stat(string name, int experience, byte level)
@@ -29,7 +28,6 @@ public sealed record Stat
         Name = name;
         Experience = experience;
         Level = level;
-        experienceCapForNextLevel = GetExpCapForNextLevel();
     }
 
     public static Stat Create(string name)
@@ -46,31 +44,27 @@ public sealed record Stat
         return new Stat(name, exp, level);
     }
 
-    public Result<bool> AddExperience(int expToAdd)
+    public Result<Stat> AddExperience(int expToAdd)
     {
-        if (expToAdd <= 0) return false;
-        if (!CanAddXp) return false;
+        if (expToAdd <= 0) return this;
+        if (!CanAddXp) return this;
 
-        Experience += expToAdd;
+        int tempExp = Experience + expToAdd;
+        byte tempLevel = Level;
 
-        while (Experience >= experienceCapForNextLevel && Level < MAX_LEVEL)
+        while (tempExp >= GetExpCapForNextLevel(tempLevel) && tempLevel < MAX_LEVEL)
         {
-            LevelUp();
+            tempExp -= GetExpCapForNextLevel(tempLevel);
+            tempLevel++;
         }
 
-        if (Level >= MAX_LEVEL) Experience = 0;
+        if (tempLevel >= MAX_LEVEL) tempExp = 0;
 
-        return true;
+        return Stat.CreateFull(Name, tempExp, tempLevel);
     }
-    public void LevelUp()
+    private static int GetExpCapForNextLevel(byte currentLevel)
     {
-        Level++;
-        Experience -= experienceCapForNextLevel;
-        experienceCapForNextLevel = GetExpCapForNextLevel();
-    }
-    private int GetExpCapForNextLevel()
-    {
-        int targetLevel = Level + 1;
+        int targetLevel = currentLevel + 1;
         return (int)(BASE_EXPERIENCE_TO_LEVEL * Math.Pow(targetLevel, XP_CURVE_EXPONENT));
     }
 
