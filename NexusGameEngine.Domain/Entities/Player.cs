@@ -42,7 +42,7 @@ public sealed class Player
 
     // public List<InventorySlot> InventorySlots {get; private set; } //TODO: Enable when entity InventorySlots has been added
 
-    public Player(Guid id, Stat mainLevel, Stat strength, Stat dexterity, Stat intelligence, Stat constitution, Health playerHealth, Stamina playerStamina, int money)
+    private Player(Guid id, Stat mainLevel, Stat strength, Stat dexterity, Stat intelligence, Stat constitution, Health playerHealth, Stamina playerStamina, int money)
     {
         Id = id;
         MainLevel = mainLevel;
@@ -72,45 +72,35 @@ public sealed class Player
         return new Player(userId, mainLevel, strength, dexterity, intelligence, constitution, healthResult.Value, staminaResult.Value, PlayerData.INITIAL_MONEY);
     }
 
-    public Result<bool> GainExperience(StatType type, int ammount)
+    public Result<bool> GainExperience(StatType type, int amount)
     {
         if (!IsAlive) return Error.Validation("Cannot Perform Action", "Player is dead and cannot gain experience");
         switch (type)
         {
             case StatType.MainLevel:
-                var result = MainLevel.AddExperience(ammount);
-                if (result.IsSuccess)
-                {
-                    MainLevel = result.Value;
-                }
+                var result = MainLevel.AddExperience(amount);
+                if (result.IsFailure) return result.ErrorList;
+                MainLevel = result.Value;
                 break;
             case StatType.Strength:
-                var resultStr = Strength.AddExperience(ammount);
-                if (resultStr.IsSuccess)
-                {
-                    Strength = resultStr.Value;
-                }
+                var resultStr = Strength.AddExperience(amount);
+                if (resultStr.IsFailure) return resultStr.ErrorList;
+                Strength = resultStr.Value;
                 break;
             case StatType.Dexterity:
-                var resultDex = Dexterity.AddExperience(ammount);
-                if (resultDex.IsSuccess)
-                {
-                    Dexterity = resultDex.Value;
-                }
+                var resultDex = Dexterity.AddExperience(amount);
+                if (resultDex.IsFailure) return resultDex.ErrorList;
+                Dexterity = resultDex.Value;
                 break;
             case StatType.Intelligence:
-                var resultInt = Intelligence.AddExperience(ammount);
-                if (resultInt.IsSuccess)
-                {
-                    Intelligence = resultInt.Value;
-                }
+                var resultInt = Intelligence.AddExperience(amount);
+                if (resultInt.IsFailure) return resultInt.ErrorList;
+                Intelligence = resultInt.Value;
                 break;
             case StatType.Constitution:
-                var resultCon = Constitution.AddExperience(ammount);
-                if (resultCon.IsSuccess)
-                {
-                    Constitution = resultCon.Value;
-                }
+                var resultCon = Constitution.AddExperience(amount);
+                if (resultCon.IsFailure) return resultCon.ErrorList;
+                Constitution = resultCon.Value;
                 break;
         }
 
@@ -120,73 +110,67 @@ public sealed class Player
     public Result<bool> TakeDamage(int damage)
     {
         if (!IsAlive) return Error.Validation("Cannot Perform Action", "Player is dead and cannot take damage");
-        if (damage <= 0) return false;
+        if (damage <= 0) return Error.Validation("TakeDamage.InvalidValue", "Damage must be greater than zero");
 
         var newHealth = PlayerHealth.Add(damage * -1); // multiplied for -1 to make it negative number
 
-        if (newHealth.IsSuccess)
-        {
-            PlayerHealth = newHealth.Value;
-            if (PlayerHealth.CurrentHealth <= 0) IsAlive = false;
-            return true;
-        }
+        if (newHealth.IsFailure) return newHealth.ErrorList;
 
-        return false;
+        PlayerHealth = newHealth.Value;
+        if (PlayerHealth.CurrentHealth <= 0) IsAlive = false;
+        
+        return true;
     }
 
     public Result<bool> Heal(int hpGain)
     {
         if (!IsAlive) return Error.Validation("Cannot Perform Action", "Player is dead and cannot Heal");
-        if (hpGain <= 0) return false;
+        if (hpGain <= 0) return Error.Validation("Heal.InvalidValue", "Heal amount must be greater than zero");
 
         var newHealth = PlayerHealth.Add(hpGain);
 
-        if (newHealth.IsSuccess)
-        {
-            PlayerHealth = newHealth.Value;
-            return true;
-        }
+        if (newHealth.IsFailure) return newHealth.ErrorList;
 
-        return false;
+        PlayerHealth = newHealth.Value;
+        
+        return true;
     }
 
-    public Result<bool> ConsumeStamina(short ammount, DateTimeOffset currentTime)
+    public Result<bool> ConsumeStamina(short amount, DateTimeOffset currentTime)
     {
         if (!IsAlive) return Error.Validation("Cannot Perform Action", "Player is dead and cannot consume Stamina");
         short actualStamina = PlayerStamina.GetActualStamina(currentTime);
         short currentMaxStamina = PlayerStamina.MaxStamina;
         short currentRegenRate = PlayerStamina.RegenRatePerSecond;
 
-        if (actualStamina < ammount) return false;
+        if (actualStamina < amount) return Error.Validation("Stamina.NotEnough", "Not enough stamina to perform this action");
 
-        var staminaResult = Stamina.Create((short)(actualStamina - ammount), currentMaxStamina, currentRegenRate, currentTime);
+        var staminaResult = Stamina.Create((short)(actualStamina - amount), currentMaxStamina, currentRegenRate, currentTime);
 
-        if (staminaResult.IsSuccess)
-        {
-            PlayerStamina = staminaResult.Value;
-            return true;
-        }
+        if (staminaResult.IsFailure) return staminaResult.ErrorList;
 
-        return false;
+        PlayerStamina = staminaResult.Value;
+        
+        return true;
     }
 
-    public Result<bool> AddMoney(int ammount)
+    public Result<bool> AddMoney(int amount)
     {
-        if (ammount <= 0) return Error.Validation("Add Money Invalid Value", "Money Added are 0 or less");
+        if (amount <= 0) return Error.Validation("Add Money Invalid Value", "Money Added are 0 or less");
 
-        Money += ammount;
+        Money += amount;
 
         return true;
     }
 
-    public Result<bool> SpendMoney(int ammount)
+    public Result<bool> SpendMoney(int amount)
     {
         if (!IsAlive) return Error.Validation("Cannot Perform Action", "Player is dead and cannot spend money");
-        if (ammount <= 0) return Error.Validation("Spend Money Invalid Value", "Cannot spend 0 money or less", [$"Money tried to be spent: {ammount}"]);
+        if (amount <= 0) return Error.Validation("Spend Money Invalid Value", "Cannot spend 0 money or less", [$"Money tried to be spent: {amount}"]);
 
-        if (Money < ammount) return Error.Validation("Spend Money Invalid Value", "Cannot spend more than you have");
+        if (Money < amount) return Error.Validation("Spend Money Invalid Value", "Cannot spend more than you have");
 
-        Money -= ammount;
+        Money -= amount;
 
         return true;
     }
