@@ -34,11 +34,13 @@ public readonly record struct Stamina
     {
         double secondPassed = (now - LastUpdateTime).TotalSeconds;
 
-        var regenerated = (short)(secondPassed * RegenRatePerSecond);
+        double regenerated = secondPassed * RegenRatePerSecond;
 
-        short actual = (short)(CurrentStamina + regenerated);
+        double actual = CurrentStamina + regenerated;
 
-        return actual > MaxStamina ? MaxStamina : actual;
+        if (actual > MaxStamina) return MaxStamina;
+        
+        return (short)actual;
     }
 
 

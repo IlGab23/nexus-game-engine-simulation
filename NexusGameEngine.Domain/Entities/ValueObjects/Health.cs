@@ -13,20 +13,20 @@ public readonly record struct Health
         MaxHealth = maxHealth;
     }
 
-    public static Result<Health> Create(short currentHealth, short maxHealth)
+    public static Result<Health> Create(int currentHealth, short maxHealth)
     {
         if (maxHealth <= 0) return Error.Validation("Max Health invalid value", "The Max Health Value cannot be 0 or less");
 
         if (currentHealth < 0) currentHealth = 0;
         if (currentHealth > maxHealth) currentHealth = maxHealth;
 
-        return new Health(currentHealth, maxHealth);
+        return new Health((short)currentHealth, maxHealth);
     }
 
     public Result<Health> Add(int healthDiff)
     {
-        short newHealth = (short)(CurrentHealth + healthDiff);
+        int newHealthInteger = CurrentHealth + healthDiff;
 
-        return Health.Create(newHealth, MaxHealth);
+        return Health.Create(newHealthInteger, MaxHealth);
     }
 }
