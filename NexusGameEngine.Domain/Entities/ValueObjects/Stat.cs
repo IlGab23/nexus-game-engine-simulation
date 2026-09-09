@@ -49,7 +49,7 @@ public readonly record struct Stat
         if (expToAdd <= 0) return this;
         if (!CanAddXp) return this;
 
-        int tempExp = Experience + expToAdd;
+        long tempExp = (long)Experience + expToAdd;
         byte tempLevel = Level;
 
         while (tempExp >= GetExpCapForNextLevel(tempLevel) && tempLevel < MAX_LEVEL)
@@ -60,7 +60,7 @@ public readonly record struct Stat
 
         if (tempLevel >= MAX_LEVEL) tempExp = 0;
 
-        return Stat.CreateFull(Name, tempExp, tempLevel);
+        return Stat.CreateFull(Name, (int)tempExp, tempLevel);
     }
     private static int GetExpCapForNextLevel(byte currentLevel)
     {
