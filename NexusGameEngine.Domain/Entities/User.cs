@@ -12,7 +12,7 @@ public sealed class User
     public Email Email { get; private set; }
     public string PasswordHash { get; private set; }
 
-    // public Player? Player { get; private set; } // TODO: Da ripristinare nella Epic 3
+    public Player? Player { get; private set; }
 
     private User(Guid id, string userName, Email email, string passwordHash, Guid? systemRoleId = null)
     {
