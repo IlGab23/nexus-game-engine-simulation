@@ -40,7 +40,8 @@ public sealed class Player
 
     public bool IsAlive { get; private set; } = true;
 
-    // public List<InventorySlot> InventorySlots {get; private set; } //TODO: Enable when entity InventorySlots has been added
+    private readonly List<InventorySlot> _inventorySlots = [];
+    public IReadOnlyCollection<InventorySlot> InventorySlots => _inventorySlots.AsReadOnly();
 
     private Player(Guid id, Stat mainLevel, Stat strength, Stat dexterity, Stat intelligence, Stat constitution, Health playerHealth, Stamina playerStamina, int money)
     {
@@ -118,7 +119,7 @@ public sealed class Player
 
         PlayerHealth = newHealth.Value;
         if (PlayerHealth.CurrentHealth <= 0) IsAlive = false;
-        
+
         return true;
     }
 
@@ -132,7 +133,7 @@ public sealed class Player
         if (newHealth.IsFailure) return newHealth.ErrorList;
 
         PlayerHealth = newHealth.Value;
-        
+
         return true;
     }
 
@@ -150,7 +151,7 @@ public sealed class Player
         if (staminaResult.IsFailure) return staminaResult.ErrorList;
 
         PlayerStamina = staminaResult.Value;
-        
+
         return true;
     }
 
@@ -190,6 +191,20 @@ public sealed class Player
         PlayerHealth = newHealthResult.Value;
         PlayerStamina = newStaminaResult.Value;
 
+        return true;
+    }
+
+    public Result<bool> AddInventorySlot(InventorySlot slot)
+    {
+        if (slot is null) return Error.Validation("Player.InvalidSlot", "The slot cannot be null");
+        _inventorySlots.Add(slot);
+        return true;
+    }
+
+    public Result<bool> RemoveInventorySlot(InventorySlot slot)
+    {
+        if (slot is null) return Error.Validation("Player.InvalidSlot", "The slot cannot be null");
+        _inventorySlots.Remove(slot);
         return true;
     }
 }
