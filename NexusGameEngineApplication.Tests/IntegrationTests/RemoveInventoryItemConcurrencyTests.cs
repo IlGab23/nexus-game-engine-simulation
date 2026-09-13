@@ -9,10 +9,10 @@ using Xunit;
 
 namespace NexusGameEngineApplication.Tests.IntegrationTests;
 
-public class AddInventoryItemConcurrencyTests
+public class RemoveInventoryItemConcurrencyTests
 {
     [Fact]
-    public async Task Handle_WithConcurrentRequests_ShouldNotDuplicateItems()
+    public async Task Handle_WithConcurrentRequests_ShouldNotCorruptInventory()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                             .UseSqlite("DataSource=:memory:")
@@ -31,6 +31,11 @@ public class AddInventoryItemConcurrencyTests
         var itemResult = Item.Create("Pozione Magica", "Una pozione magica di magia magica", 20);
         var item = itemResult.Value;
 
+        //Giving to player 50 potions divided for 3 slots
+        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 20).Value);
+        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 20).Value);
+        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 10).Value);
+
         //Adding entities to DB
         dbContext.Players.Add(player);
         dbContext.Items.Add(item);
@@ -38,11 +43,11 @@ public class AddInventoryItemConcurrencyTests
 
         //Preparing lock, handler, command
         var lockService = new PlayerLockService();
-        var handler = new AddInventoryItemHandler(dbContext, lockService);
-        var command = new AddInventoryItemCommand(player.Id, item.Id, 1); // This command will try to add 1 item per time
+        var handler = new RemoveInventoryItemHandler(dbContext, lockService);
+        var command = new RemoveInventoryItemCommand(player.Id, item.Id, 1); // This command will try to remove 1 item per time
 
         //Attack
-        int numberOfConcurrentRequests = 50;
+        int numberOfConcurrentRequests = 46;
         var tasks = new List<Task<Result<bool>>>();
 
         for (int i = 0; i < numberOfConcurrentRequests; i++)
@@ -56,20 +61,14 @@ public class AddInventoryItemConcurrencyTests
                         .Include(p => p.InventorySlots)
                         .FirstAsync(p => p.Id == player.Id);
 
-        // 1. Verify that exactly 3 slots were created (Multi-slotting behavior)
-        playerInDb.InventorySlots.Should().HaveCount(3);
+        // 1. Verify that exactly 1 slot remained
+        playerInDb.InventorySlots.Should().HaveCount(1);
 
-        // 2. Verify that the total sum of potions is EXACTLY 50 (No items lost or duplicated)
-        playerInDb.InventorySlots.Sum(s => s.Quantity).Should().Be(50);
-
-        // 3. Verify that the MaxStackQuantity(20) logic filled exactly 2 slots to their maximum capacity
-        playerInDb.InventorySlots.Count(s => s.Quantity == 20).Should().Be(2);
-
-        // 4. Verify that the remainder (10 potions) ended up in the last partial slot
-        playerInDb.InventorySlots.Count(s => s.Quantity == 10).Should().Be(1);
+        // 2. Verify that the total sum of potions is EXACTLY 4
+        playerInDb.InventorySlots.Sum(s => s.Quantity).Should().Be(4);
 
         //5. Verify that all request results contains isSuccess = true
-        allResults.Should().OnlyContain(result => result.IsSuccess, "All 50 requests return isSuccess = true without errors");
+        allResults.Should().OnlyContain(result => result.IsSuccess, "All 46 requests return isSuccess = true without errors");
 
     }
 }
