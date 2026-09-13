@@ -31,14 +31,15 @@ public class AddInventoryItemHandler(IApplicationDbContext appDbContext, IPlayer
 
             // 4. BUSINESS LOGIC (Domain)
             // Check if the player already has a slot for this item
-            var existentSlot = player.InventorySlots.FirstOrDefault(iSlot => iSlot.ItemId == item.Id);
+            var existentSlot = player.InventorySlots.FirstOrDefault(iSlot => iSlot.ItemId == item.Id && iSlot.Quantity < item.MaxStackQuantity);
 
             if (existentSlot is not null)
             {
                 // IF SLOT EXISTS: Add quantity up to the MaxStackQuantity
                 int actualQuantity = existentSlot.Quantity;
                 int AmountToAdd = Math.Min(request.Amount, item.MaxStackQuantity - actualQuantity);
-                
+
+
                 var addResult = existentSlot.AddQuantity(AmountToAdd, item.MaxStackQuantity);
                 if (addResult.IsFailure) return addResult.ErrorList;
 
