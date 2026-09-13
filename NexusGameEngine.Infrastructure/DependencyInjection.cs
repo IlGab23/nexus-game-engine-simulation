@@ -10,6 +10,7 @@ using NexusGameEngine.Domain.Entities;
 using NexusGameEngine.Infrastructure.Persistance;
 using NexusGameEngine.Infrastructure.Persistance.Seeding;
 using NexusGameEngine.Infrastructure.Security;
+using NexusGameEngine.Infrastructure.Services;
 
 namespace NexusGameEngine.Infrastructure;
 
@@ -70,6 +71,8 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();
         services.AddSingleton<IRefreshTokenProvider, RefreshTokenProvider>();
+
+        services.AddSingleton<IPlayerLockService, PlayerLockService>();
 
         return services;
     }
