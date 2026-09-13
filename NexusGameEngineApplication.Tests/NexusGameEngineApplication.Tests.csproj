@@ -2,10 +2,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NexusGameEngine.Application\NexusGameEngine.Application.csproj" />
+    <ProjectReference Include="..\NexusGameEngine.Infrastructure\NexusGameEngine.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.10.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="xunit" Version="2.9.3" />
   </ItemGroup>
