@@ -26,7 +26,7 @@ public class AddInventoryItemHandler(IApplicationDbContext appDbContext, IPlayer
             if (player is null) return Error.NotFound("AddItem.PlayerNotFound", "Player does not exists");
 
             // Load the Item from the database
-            var item = await appDbContext.Items.FirstOrDefaultAsync(i => i.Id == request.ItemId, cancellationToken);
+            var item = await appDbContext.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == request.ItemId, cancellationToken);
             if (item is null) return Error.NotFound("AddItem.ItemNotFound", "Item does not exists");
 
             // 4. BUSINESS LOGIC (Domain)
