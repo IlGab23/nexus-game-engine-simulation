@@ -40,6 +40,8 @@ public sealed class Player
 
     public bool IsAlive { get; private set; } = true;
 
+    public SpecialSkill? ActiveSpecialSkill { get; private set; }
+
     private readonly List<InventorySlot> _inventorySlots = [];
     public IReadOnlyCollection<InventorySlot> InventorySlots => _inventorySlots.AsReadOnly();
 
@@ -193,6 +195,13 @@ public sealed class Player
 
         PlayerHealth = newHealthResult.Value;
         PlayerStamina = newStaminaResult.Value;
+
+        return true;
+    }
+
+    public Result<bool> EquipSpecialSkill(SpecialSkill skill)
+    {
+        ActiveSpecialSkill = skill;
 
         return true;
     }
