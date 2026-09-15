@@ -27,7 +27,6 @@ PASSO 2: SETUP CQRS E INJECTION DEL TIMEPROVIDER :::::: CHIUSO
 PASSO 3: IMPLEMENTAZIONE DEGLI HANDLER
 
 PASSO 3A: Logica di `ClaimDailyRewardHandler` (Loot Randomico)
-- [ ] Modificare la firma del Command per restituire il DTO `Result<DailyRewardResponse>`.
 - [ ] Recuperare il `Player` dal DB includendo i cooldown (`Include(p => p.Cooldowns)`).
 - [ ] Ottenere l'ora esatta con `_timeProvider.GetUtcNow()` e calcolare la mezzanotte del giorno successivo.
 - [ ] Chiamare `player.TryStartCooldown(GameConstants.Actions.ClaimDailyReward, mezzanotte, currentTime)`. Se fallisce (es. premio già riscosso), ritornare l'errore.

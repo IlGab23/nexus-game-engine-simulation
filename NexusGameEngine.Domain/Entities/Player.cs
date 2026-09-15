@@ -206,6 +206,46 @@ public sealed class Player
         return true;
     }
 
+    public Result<bool> AddItemToInventory(Item item, int amount)
+    {
+        // BUSINESS LOGIC (Domain)
+        // Check if the player already has a slot for this item
+        var existentSlot = _inventorySlots.FirstOrDefault(iSlot => iSlot.ItemId == item.Id && iSlot.Quantity < item.MaxStackQuantity);
+
+        if (existentSlot is not null)
+        {
+            // IF SLOT EXISTS: Add quantity up to the MaxStackQuantity
+            int actualQuantity = existentSlot.Quantity;
+            int AmountToAdd = Math.Min(amount, item.MaxStackQuantity - actualQuantity);
+
+
+            var addResult = existentSlot.AddQuantity(AmountToAdd, item.MaxStackQuantity);
+            if (addResult.IsFailure) return addResult.ErrorList;
+
+            // Calculate the remainder. If there are items left over, create a NEW slot (Multi-slotting)
+            int itemOverFlow = amount - AmountToAdd;
+            if (itemOverFlow > 0)
+            {
+                var invSlot = InventorySlot.Create(Id, item, itemOverFlow);
+                if (invSlot.IsFailure) return invSlot.ErrorList;
+
+                var addSlotResult = AddInventorySlot(invSlot.Value);
+                if (addSlotResult.IsFailure) return addSlotResult.ErrorList;
+            }
+        }
+        else
+        {
+            // IF SLOT DOES NOT EXIST: Create a new slot and add it to the Player
+            var invSlot = InventorySlot.Create(Id, item, amount);
+            if (invSlot.IsFailure) return invSlot.ErrorList;
+
+            var addResult = AddInventorySlot(invSlot.Value);
+            if (addResult.IsFailure) return addResult.ErrorList;
+        }
+
+        return true;
+    }
+
     public Result<bool> AddInventorySlot(InventorySlot slot)
     {
         if (slot is null) return Error.Validation("Player.InvalidSlot", "The slot cannot be null");

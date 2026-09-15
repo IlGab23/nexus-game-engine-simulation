@@ -32,6 +32,11 @@ public static class GameConstants
         public static readonly SpecialSkill DexterityLevel3 = SpecialSkill.Create("Lightning Phantom", StatType.Dexterity, 2.2).Value;
     }
 
+    public static class DailyRewardData
+    {
+        public static readonly int[] RandomMoney = [100, 200, 300, 500, 1000];
+    }
+
     public static class PlayerData
     {
         public const string STAT_MAIN_LEVEL_NAME = "Main Level";

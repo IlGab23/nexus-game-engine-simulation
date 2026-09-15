@@ -29,40 +29,8 @@ public class AddInventoryItemHandler(IApplicationDbContext appDbContext, IPlayer
             var item = await appDbContext.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == request.ItemId, cancellationToken);
             if (item is null) return Error.NotFound("AddItem.ItemNotFound", "Item does not exists");
 
-            // 4. BUSINESS LOGIC (Domain)
-            // Check if the player already has a slot for this item
-            var existentSlot = player.InventorySlots.FirstOrDefault(iSlot => iSlot.ItemId == item.Id && iSlot.Quantity < item.MaxStackQuantity);
-
-            if (existentSlot is not null)
-            {
-                // IF SLOT EXISTS: Add quantity up to the MaxStackQuantity
-                int actualQuantity = existentSlot.Quantity;
-                int AmountToAdd = Math.Min(request.Amount, item.MaxStackQuantity - actualQuantity);
-
-
-                var addResult = existentSlot.AddQuantity(AmountToAdd, item.MaxStackQuantity);
-                if (addResult.IsFailure) return addResult.ErrorList;
-
-                // Calculate the remainder. If there are items left over, create a NEW slot (Multi-slotting)
-                int itemOverFlow = request.Amount - AmountToAdd;
-                if (itemOverFlow > 0)
-                {
-                    var invSlot = InventorySlot.Create(player.Id, item, itemOverFlow);
-                    if (invSlot.IsFailure) return invSlot.ErrorList;
-
-                    var addSlotResult = player.AddInventorySlot(invSlot.Value);
-                    if (addSlotResult.IsFailure) return addSlotResult.ErrorList;
-                }
-            }
-            else
-            {
-                // IF SLOT DOES NOT EXIST: Create a new slot and add it to the Player
-                var invSlot = InventorySlot.Create(player.Id, item, request.Amount);
-                if (invSlot.IsFailure) return invSlot.ErrorList;
-
-                var addResult = player.AddInventorySlot(invSlot.Value);
-                if (addResult.IsFailure) return addResult.ErrorList;
-            }
+            var addItemResult = player.AddItemToInventory(item, request.Amount);
+            if (addItemResult.IsFailure) return addItemResult.ErrorList;
 
             // 5. SAVE TO DATABASE
             // Entity Framework will detect changes made in RAM to tracked objects
