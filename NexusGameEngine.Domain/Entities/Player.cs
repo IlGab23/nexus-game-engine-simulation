@@ -40,8 +40,13 @@ public sealed class Player
 
     public bool IsAlive { get; private set; } = true;
 
+    public SpecialSkill? ActiveSpecialSkill { get; private set; }
+
     private readonly List<InventorySlot> _inventorySlots = [];
     public IReadOnlyCollection<InventorySlot> InventorySlots => _inventorySlots.AsReadOnly();
+
+    private readonly List<PlayerCooldown> _cooldowns = [];
+    public IReadOnlyCollection<PlayerCooldown> Cooldowns => _cooldowns.AsReadOnly();
 
     private Player(Guid id, Stat mainLevel, Stat strength, Stat dexterity, Stat intelligence, Stat constitution, Health playerHealth, Stamina playerStamina, int money)
     {
@@ -58,19 +63,19 @@ public sealed class Player
 
     public static Result<Player> Create(Guid userId, DateTimeOffset currentTime)
     {
-        Stat mainLevel = Stat.Create(PlayerData.STAT_MAIN_LEVEL_NAME);
-        Stat strength = Stat.Create(PlayerData.STAT_STRENGTH_NAME);
-        Stat dexterity = Stat.Create(PlayerData.STAT_DEXTERITY_NAME);
-        Stat intelligence = Stat.Create(PlayerData.STAT_INTELLIGENCE_NAME);
-        Stat constitution = Stat.Create(PlayerData.STAT_CONSTITUTION_NAME);
+        Stat mainLevel = Stat.Create(GameConstants.PlayerData.STAT_MAIN_LEVEL_NAME);
+        Stat strength = Stat.Create(GameConstants.PlayerData.STAT_STRENGTH_NAME);
+        Stat dexterity = Stat.Create(GameConstants.PlayerData.STAT_DEXTERITY_NAME);
+        Stat intelligence = Stat.Create(GameConstants.PlayerData.STAT_INTELLIGENCE_NAME);
+        Stat constitution = Stat.Create(GameConstants.PlayerData.STAT_CONSTITUTION_NAME);
 
-        var healthResult = Health.Create(PlayerData.INITIAL_HEALTH, PlayerData.INITIAL_MAX_HEALTH);
+        var healthResult = Health.Create(GameConstants.PlayerData.INITIAL_HEALTH, GameConstants.PlayerData.INITIAL_MAX_HEALTH);
         if (healthResult.IsFailure) return healthResult.ErrorList;
 
-        var staminaResult = Stamina.Create(PlayerData.INITIAL_STAMINA, PlayerData.INITIAL_MAX_STAMINA, PlayerData.INITIAL_STAMINA_REGEN_RATE, currentTime);
+        var staminaResult = Stamina.Create(GameConstants.PlayerData.INITIAL_STAMINA, GameConstants.PlayerData.INITIAL_MAX_STAMINA, GameConstants.PlayerData.INITIAL_STAMINA_REGEN_RATE, currentTime);
         if (staminaResult.IsFailure) return staminaResult.ErrorList;
 
-        return new Player(userId, mainLevel, strength, dexterity, intelligence, constitution, healthResult.Value, staminaResult.Value, PlayerData.INITIAL_MONEY);
+        return new Player(userId, mainLevel, strength, dexterity, intelligence, constitution, healthResult.Value, staminaResult.Value, GameConstants.PlayerData.INITIAL_MONEY);
     }
 
     public Result<bool> GainExperience(StatType type, int amount)
@@ -180,7 +185,7 @@ public sealed class Player
     {
         if (IsAlive) return Error.Validation("Cannot Respawn", "Player is already alive and cannot respawn");
 
-        var newHealthResult = Health.Create(PlayerData.HEALTH_ON_RESPAWN, PlayerHealth.MaxHealth);
+        var newHealthResult = Health.Create(GameConstants.PlayerData.HEALTH_ON_RESPAWN, PlayerHealth.MaxHealth);
         if (newHealthResult.IsFailure) return newHealthResult.ErrorList;
 
         var newStaminaResult = Stamina.Create(PlayerStamina.MaxStamina, PlayerStamina.MaxStamina, PlayerStamina.RegenRatePerSecond, currentTime);
@@ -190,6 +195,53 @@ public sealed class Player
 
         PlayerHealth = newHealthResult.Value;
         PlayerStamina = newStaminaResult.Value;
+
+        return true;
+    }
+
+    public Result<bool> EquipSpecialSkill(SpecialSkill skill)
+    {
+        ActiveSpecialSkill = skill;
+
+        return true;
+    }
+
+    public Result<bool> AddItemToInventory(Item item, int amount)
+    {
+        // BUSINESS LOGIC (Domain)
+        // Check if the player already has a slot for this item
+        var existentSlot = _inventorySlots.FirstOrDefault(iSlot => iSlot.ItemId == item.Id && iSlot.Quantity < item.MaxStackQuantity);
+
+        if (existentSlot is not null)
+        {
+            // IF SLOT EXISTS: Add quantity up to the MaxStackQuantity
+            int actualQuantity = existentSlot.Quantity;
+            int AmountToAdd = Math.Min(amount, item.MaxStackQuantity - actualQuantity);
+
+
+            var addResult = existentSlot.AddQuantity(AmountToAdd, item.MaxStackQuantity);
+            if (addResult.IsFailure) return addResult.ErrorList;
+
+            // Calculate the remainder. If there are items left over, create a NEW slot (Multi-slotting)
+            int itemOverFlow = amount - AmountToAdd;
+            if (itemOverFlow > 0)
+            {
+                var invSlot = InventorySlot.Create(Id, item, itemOverFlow);
+                if (invSlot.IsFailure) return invSlot.ErrorList;
+
+                var addSlotResult = AddInventorySlot(invSlot.Value);
+                if (addSlotResult.IsFailure) return addSlotResult.ErrorList;
+            }
+        }
+        else
+        {
+            // IF SLOT DOES NOT EXIST: Create a new slot and add it to the Player
+            var invSlot = InventorySlot.Create(Id, item, amount);
+            if (invSlot.IsFailure) return invSlot.ErrorList;
+
+            var addResult = AddInventorySlot(invSlot.Value);
+            if (addResult.IsFailure) return addResult.ErrorList;
+        }
 
         return true;
     }
@@ -205,6 +257,22 @@ public sealed class Player
     {
         if (slot is null) return Error.Validation("Player.InvalidSlot", "The slot cannot be null");
         _inventorySlots.Remove(slot);
+        return true;
+    }
+
+    public Result<bool> TryStartCooldown(string actionId, DateTimeOffset newReadyAt, DateTimeOffset currentTime)
+    {
+        PlayerCooldown? currentCooldown = _cooldowns.FirstOrDefault(c => c.ActionId == actionId);
+
+        if (currentCooldown is not null && currentTime < currentCooldown.ReadyAt) return Error.Conflict("Cooldown.Active", "The action is not avabile yet");
+
+        Result<PlayerCooldown> newCooldownResult = PlayerCooldown.Create(actionId, newReadyAt, currentTime);
+        if (newCooldownResult.IsFailure) return newCooldownResult.ErrorList;
+
+        if (currentCooldown is not null) _cooldowns.Remove(currentCooldown);
+
+        _cooldowns.Add(newCooldownResult.Value);
+
         return true;
     }
 }
