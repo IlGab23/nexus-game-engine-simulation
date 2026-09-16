@@ -7,7 +7,7 @@ using NexusGameEngine.Domain.ResultPattern;
 
 namespace NexusGameEngine.Application.Features.Player.Commands;
 
-public class ClaimDailyRewardHandler(IApplicationDbContext appDbContext, TimeProvider timeProvider) : IRequestHandler<ClaimDailyRewardCommand, Result<DailyRewardResponse>>
+public class ClaimDailyRewardHandler(IApplicationDbContext appDbContext, TimeProvider timeProvider, IRandomProvider rndProvider) : IRequestHandler<ClaimDailyRewardCommand, Result<DailyRewardResponse>>
 {
     public async Task<Result<DailyRewardResponse>> Handle(ClaimDailyRewardCommand request, CancellationToken cancellationToken)
     {
@@ -24,7 +24,7 @@ public class ClaimDailyRewardHandler(IApplicationDbContext appDbContext, TimePro
         var tryStartCooldownResult = player.TryStartCooldown(GameConstants.Actions.ClaimDailyReward, nextMidnight, nowTime);
         if (tryStartCooldownResult.IsFailure) return tryStartCooldownResult.ErrorList;
 
-        int randomChoice = System.Random.Shared.Next(0, 100);
+        int randomChoice = rndProvider.GetRandomNumberInRange(0, 100);
 
         if (randomChoice <= 49)
         {

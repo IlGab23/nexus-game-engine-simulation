@@ -51,14 +51,14 @@ PASSO 4: CREAZIONE DEGLI ENDPOINT (MINIMAL API) :::::: CHIUSO
 - [ ] Endpoint POST `/api/players/use-special-skill`: Invia il `UseSpecialSkillCommand` a MediatR.
 - [ ] Assicurarsi che la risposta HTTP mappi correttamente il `Result` (es. restituendo 409 Conflict o 400 Bad Request se il comando fallisce per via del cooldown).
 
-PASSO 5: UNIT TESTING E FAKETIMEPROVIDER
+PASSO 5: UNIT TESTING E FAKETIMEPROVIDER :::::: CHIUSO
 - [ ] Creare una classe di Unit Test (es. `ClaimDailyRewardTests`) usando `xUnit` e `Moq` (per mockare il DB, trattandosi di unit test).
 - [ ] Istanziare un `FakeTimeProvider` (dal pacchetto `Microsoft.Extensions.TimeProvider.Testing`).
 - [ ] TEST A: Lanciare l'handler -> Successo.
 - [ ] TEST B: Rilanciare l'handler immediatamente -> Fallimento (Cooldown Attivo).
 - [ ] TEST C: Avanzare il tempo artificialmente di 24 ore (`fakeTimeProvider.Advance(TimeSpan.FromHours(24))`) e rilanciare l'handler -> Ritorna al Successo!
 
-PASSO 6: DEFINITION OF DONE (DoD) - Criteri di Accettazione
+PASSO 6: DEFINITION OF DONE (DoD) - Criteri di Accettazione :::::: CHIUSO
 - [ ] Il codice compila senza warning.
 - [ ] L'uso di DateTime.Now o DateTime.UtcNow è rigorosamente vietato nel livello Application/Domain.
 - [ ] Il sistema respinge l'azione con un errore Error.Conflict.
