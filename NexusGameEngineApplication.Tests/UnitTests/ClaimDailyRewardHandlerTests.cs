@@ -5,6 +5,7 @@ using Moq;
 using NexusGameEngine.Application.Features.Player.Commands;
 using NexusGameEngine.Application.Interfaces;
 using NexusGameEngine.Domain.Entities;
+using NexusGameEngine.Domain.Enums;
 using NexusGameEngine.Infrastructure.Persistance;
 using Xunit;
 
@@ -105,7 +106,7 @@ public class ClaimDailyRewardHandlerTests
         dbContext.Players.Add(player);
         int playerInvSlotCount = player.InventorySlots.Count;
 
-        var item = Item.Create("Spada Epica", "Spada di test", 1).Value;
+        var item = Item.Create("Spada Epica", "Spada di test", 1, ItemType.Misc, "{}").Value;
         dbContext.Items.Add(item);
 
         await dbContext.SaveChangesAsync();

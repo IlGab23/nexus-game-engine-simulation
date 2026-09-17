@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using NexusGameEngine.Application.Features.Player.Commands;
 using NexusGameEngine.Domain.Entities;
+using NexusGameEngine.Domain.Enums;
 using NexusGameEngine.Domain.ResultPattern;
 using NexusGameEngine.Infrastructure.Persistance;
 using NexusGameEngine.Infrastructure.Services;
@@ -28,13 +29,13 @@ public class RemoveInventoryItemConcurrencyTests
         var playerResult = Player.Create(Guid.NewGuid(), TimeProvider.System.GetUtcNow());
         var player = playerResult.Value;
 
-        var itemResult = Item.Create("Pozione Magica", "Una pozione magica di magia magica", 20);
+        var itemResult = Item.Create("Pozione Magica", "Una pozione magica di magia magica", 20, ItemType.Misc, "{}");
         var item = itemResult.Value;
 
         //Giving to player 50 potions divided for 3 slots
-        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 20).Value);
-        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 20).Value);
-        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 10).Value);
+        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 20, "{}").Value);
+        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 20, "{}").Value);
+        player.AddInventorySlot(InventorySlot.Create(player.Id, item, 10, "{}").Value);
 
         //Adding entities to DB
         dbContext.Players.Add(player);
