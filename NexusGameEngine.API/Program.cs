@@ -108,5 +108,6 @@ app.UseAuthorization();
 app.MapSystemEndpoints();
 app.MapAuthEndpoints();
 app.MapPlayerEndpoints();
+app.MapInventoryEndpoints();
 
 app.Run();

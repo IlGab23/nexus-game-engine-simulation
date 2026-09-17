@@ -10,16 +10,18 @@ public sealed class InventorySlot
     public Guid ItemId { get; init; }
     public Item? Item { get; private set; }
     public int Quantity { get; private set; }
+    public string StatePayload { get; private set; } = string.Empty;
 
-    private InventorySlot(Guid id, Guid playerId, Guid itemId, int quantity)
+    private InventorySlot(Guid id, Guid playerId, Guid itemId, int quantity, string statePayload)
     {
         Id = id;
         PlayerId = playerId;
         ItemId = itemId;
         Quantity = quantity;
+        StatePayload = statePayload;
     }
 
-    public static Result<InventorySlot> Create(Guid playerId, Item item, int quantity)
+    public static Result<InventorySlot> Create(Guid playerId, Item item, int quantity, string statePayload)
     {
         if (item is null) return Error.Validation("InventorySlot.InvalidItem", "The item is not defined");
 
@@ -29,7 +31,7 @@ public sealed class InventorySlot
         if (quantity <= 0) return Error.Validation("InventorySlot.InvalidQuantity", "Quantity cannot be 0 or less");
         if (quantity > item.MaxStackQuantity) return Error.Validation("InventorySlot.InvalidQuantity", $"Quantity cannot be more than the MaxStackQuantity({item.MaxStackQuantity}) of the item");
 
-        return new InventorySlot(Guid.NewGuid(), playerId, item.Id, quantity);
+        return new InventorySlot(Guid.NewGuid(), playerId, item.Id, quantity, statePayload);
     }
 
     public Result<bool> AddQuantity(int amount, int maxStackQuantity)
@@ -53,6 +55,13 @@ public sealed class InventorySlot
         if (Quantity < amount) return Error.Validation("InventorySlot.InvalidRemoveQuantity", "The quantity cannot be 0 or less");
 
         Quantity -= amount;
+        return true;
+    }
+
+    public Result<bool> UpdateStatePayload(string newPayload)
+    {
+        if (string.IsNullOrWhiteSpace(newPayload)) return Error.Validation("InventorySlot.newStatePayloadEmpty", "The new payload cannot be empty");
+        StatePayload = newPayload;
         return true;
     }
 }

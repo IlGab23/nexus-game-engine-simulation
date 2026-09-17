@@ -160,6 +160,25 @@ public sealed class Player
         return true;
     }
 
+    public Result<bool> GainStamina(short amount, DateTimeOffset currentTime)
+    {
+        if (!IsAlive) return Error.Validation("Cannot Perform Action", "Player is dead and cannot consume Stamina");
+        if (amount <= 0) return Error.Validation("Stamina.InvalidAmount", "Stamina amount to add cannot be 0 or less");
+
+        short actualStamina = PlayerStamina.GetActualStamina(currentTime);
+        short currentMaxStamina = PlayerStamina.MaxStamina;
+
+        int newStaminaValue = actualStamina + amount;
+
+        var staminaResult = Stamina.Create((short)(newStaminaValue), currentMaxStamina, PlayerStamina.RegenRatePerSecond, currentTime);
+
+        if (staminaResult.IsFailure) return staminaResult.ErrorList;
+
+        PlayerStamina = staminaResult.Value;
+
+        return true;
+    }
+
     public Result<bool> AddMoney(int amount)
     {
         if (amount <= 0) return Error.Validation("Add Money Invalid Value", "Money Added are 0 or less");
@@ -212,6 +231,13 @@ public sealed class Player
         // Check if the player already has a slot for this item
         var existentSlot = _inventorySlots.FirstOrDefault(iSlot => iSlot.ItemId == item.Id && iSlot.Quantity < item.MaxStackQuantity);
 
+        string initialStatePayload = item.ItemType switch
+        {
+            ItemType.Weapon => "{}", // TODO EPIC EQUIP: serializzare un nuovo WeaponStatePayload con Durabilità 100
+            ItemType.Armor => "{}",  // TODO EPIC EQUIP: serializzare un nuovo ArmorStatePayload
+            _ => "{}"                // Consumabili e Misc non avranno mai uno stato dinamico oltre alla quantità
+        };
+
         if (existentSlot is not null)
         {
             // IF SLOT EXISTS: Add quantity up to the MaxStackQuantity
@@ -226,7 +252,7 @@ public sealed class Player
             int itemOverFlow = amount - AmountToAdd;
             if (itemOverFlow > 0)
             {
-                var invSlot = InventorySlot.Create(Id, item, itemOverFlow);
+                var invSlot = InventorySlot.Create(Id, item, itemOverFlow, initialStatePayload);
                 if (invSlot.IsFailure) return invSlot.ErrorList;
 
                 var addSlotResult = AddInventorySlot(invSlot.Value);
@@ -236,7 +262,7 @@ public sealed class Player
         else
         {
             // IF SLOT DOES NOT EXIST: Create a new slot and add it to the Player
-            var invSlot = InventorySlot.Create(Id, item, amount);
+            var invSlot = InventorySlot.Create(Id, item, amount, initialStatePayload);
             if (invSlot.IsFailure) return invSlot.ErrorList;
 
             var addResult = AddInventorySlot(invSlot.Value);

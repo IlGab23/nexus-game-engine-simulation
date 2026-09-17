@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using NexusGameEngine.Domain.Enums;
 using NexusGameEngine.Domain.ResultPattern;
 
 namespace NexusGameEngine.Domain.Entities;
@@ -13,16 +14,20 @@ public sealed partial class Item
     public string Name { get; init; }
     public string Description { get; init; }
     public int MaxStackQuantity { get; init; }
+    public ItemType ItemType { get; init; }
+    public string ActionPayload { get; init; } = string.Empty;
 
-    private Item(Guid id, string name, string description, int maxStackQuantity)
+    private Item(Guid id, string name, string description, int maxStackQuantity, ItemType itemType, string actionPayload)
     {
         Id = id;
         Name = name;
         Description = description;
         MaxStackQuantity = maxStackQuantity;
+        ItemType = itemType;
+        ActionPayload = actionPayload;
     }
 
-    public static Result<Item> Create(string name, string description, int maxStackQuantity)
+    public static Result<Item> Create(string name, string description, int maxStackQuantity, ItemType itemType, string actionPayload)
     {
         if (string.IsNullOrWhiteSpace(name)) return Error.Validation("Item.EmptyName", "The item name cannot be empty");
         if (name.Length > MAX_NAME_LENGTH || name.Length <= 3) return Error.Validation("Item.InvalidNameLength", "The item name length must be between 3 and 50 chars");
@@ -34,7 +39,7 @@ public sealed partial class Item
 
         if (maxStackQuantity <= 0) return Error.Validation("Item.InvalidMaxStackQuantity", "The item MaxStackQuantity cannot be 0 or a negative number");
 
-        return new Item(Guid.NewGuid(), name, description, maxStackQuantity);
+        return new Item(Guid.NewGuid(), name, description, maxStackQuantity, itemType, actionPayload);
     }
 
     [GeneratedRegex(@"^(?=.*\p{L})[\p{L}0-9\s\-\']+$")]
