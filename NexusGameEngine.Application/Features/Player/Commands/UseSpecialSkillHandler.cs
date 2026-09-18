@@ -15,7 +15,7 @@ public class UseSpecialSkillHandler(IApplicationDbContext appDbContext, TimeProv
                             .FirstOrDefaultAsync(p => p.Id == request.PlayerId, cancellationToken);
         if (player is null) return Error.NotFound("Player.NotFound", "The player does not exist");
 
-        if (!player.ActiveSpecialSkill.HasValue) return Error.Conflict("Player.NoSpecialSkill", "The player doesn't have a special skill equipped");
+        if (player.ActiveSpecialSkill is null) return Error.Conflict("Player.NoSpecialSkill", "The player doesn't have a special skill equipped");
 
         var nowTime = timeProvider.GetUtcNow();
         var newSkillDelay = nowTime + GameConstants.ActionCooldowns.UseSpecialSkillCooldown;

@@ -10,12 +10,12 @@ public readonly record struct Stamina
 
     public DateTimeOffset LastUpdateTime { get; init; }
 
-    public Stamina(short currentStamina, short maxStamina, short regenRatePerSecond, DateTimeOffset lastUpdate)
+    private Stamina(short currentStamina, short maxStamina, short regenRatePerSecond, DateTimeOffset lastUpdateTime)
     {
         CurrentStamina = currentStamina;
         MaxStamina = maxStamina;
         RegenRatePerSecond = regenRatePerSecond;
-        LastUpdateTime = lastUpdate;
+        LastUpdateTime = lastUpdateTime;
     }
 
     public static Result<Stamina> Create(short currentStamina, short maxStamina, short regenRatePerSecond, DateTimeOffset lastUpdate)
@@ -39,7 +39,7 @@ public readonly record struct Stamina
         double actual = CurrentStamina + regenerated;
 
         if (actual > MaxStamina) return MaxStamina;
-        
+
         return (short)actual;
     }
 

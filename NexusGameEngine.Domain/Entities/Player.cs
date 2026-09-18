@@ -46,7 +46,7 @@ public sealed class Player
     public IReadOnlyCollection<InventorySlot> InventorySlots => _inventorySlots.AsReadOnly();
 
     private readonly List<PlayerCooldown> _cooldowns = [];
-    public IReadOnlyCollection<PlayerCooldown> Cooldowns => _cooldowns.AsReadOnly();
+    public IList<PlayerCooldown> Cooldowns => _cooldowns.AsReadOnly();
 
     private Player(Guid id, Stat mainLevel, Stat strength, Stat dexterity, Stat intelligence, Stat constitution, Health playerHealth, Stamina playerStamina, int money)
     {
@@ -60,6 +60,10 @@ public sealed class Player
         PlayerStamina = playerStamina;
         Money = money;
     }
+
+#pragma warning disable CS8618
+    private Player() { }
+#pragma warning restore CS8618
 
     public static Result<Player> Create(Guid userId, DateTimeOffset currentTime)
     {
