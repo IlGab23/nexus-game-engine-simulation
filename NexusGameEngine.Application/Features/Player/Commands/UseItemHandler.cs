@@ -22,6 +22,8 @@ public class UseItemHandler(IApplicationDbContext appDbContext, TimeProvider tim
         var invSlot = player.InventorySlots.FirstOrDefault(invS => invS.Id == request.InventorySlotId);
         if (invSlot is null) return Error.NotFound("UseItem.InventorySlotNotFound", "The player does not have that inventory slot");
 
+        if (invSlot.Item is null) return Error.NotFound("UseItem.ItemNotFound", "The item data is missing or corrupted");
+
         switch (invSlot.Item.ItemType)
         {
             case ItemType.Consumable:
