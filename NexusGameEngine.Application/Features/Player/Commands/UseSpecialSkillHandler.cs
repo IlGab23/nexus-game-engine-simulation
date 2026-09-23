@@ -10,9 +10,7 @@ public class UseSpecialSkillHandler(IApplicationDbContext appDbContext, TimeProv
 {
     public async Task<Result<bool>> Handle(UseSpecialSkillCommand request, CancellationToken cancellationToken)
     {
-        var player = await appDbContext.Players
-                            .Include(p => p.Cooldowns)
-                            .FirstOrDefaultAsync(p => p.Id == request.PlayerId, cancellationToken);
+        var player = await appDbContext.Players.FirstOrDefaultAsync(p => p.Id == request.PlayerId, cancellationToken);
         if (player is null) return Error.NotFound("Player.NotFound", "The player does not exist");
 
         if (player.ActiveSpecialSkill is null) return Error.Conflict("Player.NoSpecialSkill", "The player doesn't have a special skill equipped");

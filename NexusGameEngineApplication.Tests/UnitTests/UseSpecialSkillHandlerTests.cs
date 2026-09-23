@@ -4,6 +4,7 @@ using Microsoft.Extensions.Time.Testing;
 using NexusGameEngine.Application.Features.Player.Commands;
 using NexusGameEngine.Domain.Constants;
 using NexusGameEngine.Domain.Entities;
+using NexusGameEngine.Domain.Entities.ValueObjects;
 using NexusGameEngine.Infrastructure.Persistance;
 using Xunit;
 
@@ -28,9 +29,14 @@ public class UseSpecialSkillHandlerTests
         var fakeTimeProvider = new FakeTimeProvider();
         var nowTime = fakeTimeProvider.GetUtcNow();
 
-        var player = Player.Create(Guid.NewGuid(), nowTime).Value;
+        var emailResult = Email.Create("testUser@gmail.com");
+        var userResult = User.Create("testUser", emailResult.Value, "HashedPassword", SystemRoleNames.PlayerId);
+        var user = userResult.Value;
+
+        var player = Player.Create(user.Id, nowTime).Value;
         var specialSkill = GameConstants.SpecialSkillsCatalog.ConstitutionLevel2;
         player.EquipSpecialSkill(specialSkill);
+        dbContext.Users.Add(user);
         dbContext.Players.Add(player);
 
         await dbContext.SaveChangesAsync();
@@ -54,7 +60,7 @@ public class UseSpecialSkillHandlerTests
         handlerWithCooldownResult.IsFailure.Should().BeTrue();
         handlerWithCooldownResetResult.IsSuccess.Should().BeTrue();
 
-        var playerFromDb = await dbContext.Players.Include(p => p.Cooldowns).FirstAsync();
+        var playerFromDb = await dbContext.Players.FirstAsync();
         playerFromDb.Cooldowns.Should().HaveCount(1);
     }
 
@@ -75,7 +81,12 @@ public class UseSpecialSkillHandlerTests
         var fakeTimeProvider = new FakeTimeProvider();
         var nowTime = fakeTimeProvider.GetUtcNow();
 
-        var player = Player.Create(Guid.NewGuid(), nowTime).Value;
+        var emailResult = Email.Create("testUser@gmail.com");
+        var userResult = User.Create("testUser", emailResult.Value, "HashedPassword", SystemRoleNames.PlayerId);
+        var user = userResult.Value;
+
+        var player = Player.Create(user.Id, nowTime).Value;
+        dbContext.Users.Add(user);
         dbContext.Players.Add(player);
 
         await dbContext.SaveChangesAsync();
@@ -89,7 +100,7 @@ public class UseSpecialSkillHandlerTests
         //Assert
         handlerResult.IsSuccess.Should().BeFalse();
 
-        var playerFromDb = await dbContext.Players.Include(p => p.Cooldowns).FirstAsync();
+        var playerFromDb = await dbContext.Players.FirstAsync();
         playerFromDb.Cooldowns.Should().HaveCount(0);
     }
 }

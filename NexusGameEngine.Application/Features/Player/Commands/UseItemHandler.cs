@@ -50,8 +50,16 @@ public class UseItemHandler(IApplicationDbContext appDbContext, TimeProvider tim
     {
         if (consumablePayload is null) return Error.Validation("UseItem.InvalidPayload", "Cannot read item data");
 
-        if (consumablePayload.HealAmount.HasValue) player.Heal(consumablePayload.HealAmount.Value);
-        if (consumablePayload.StaminaAmount.HasValue) player.GainStamina((short)consumablePayload.StaminaAmount.Value, timeProvider.GetUtcNow());
+        if (consumablePayload.HealAmount.HasValue)
+        {
+            var healSuccess = player.Heal(consumablePayload.HealAmount.Value);
+            if (healSuccess.IsFailure) return healSuccess.ErrorList;
+        }
+        if (consumablePayload.StaminaAmount.HasValue)
+        {
+            var gStaminaResult = player.GainStamina((short)consumablePayload.StaminaAmount.Value, timeProvider.GetUtcNow());
+            if (gStaminaResult.IsFailure) return gStaminaResult.ErrorList;
+        }
 
         var removeResult = invSlot.RemoveQuantity(1);
         if (removeResult.IsFailure) return removeResult.ErrorList;
