@@ -1,7 +1,9 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using NexusGameEngine.Application.Features.Player.Commands;
+using NexusGameEngine.Domain.Constants;
 using NexusGameEngine.Domain.Entities;
+using NexusGameEngine.Domain.Entities.ValueObjects;
 using NexusGameEngine.Domain.Enums;
 using NexusGameEngine.Domain.ResultPattern;
 using NexusGameEngine.Infrastructure.Persistance;
@@ -25,14 +27,20 @@ public class AddInventoryItemConcurrencyTests
         //NOTE: This will crash until we will make entity configurations in [INV-04] task
         await dbContext.Database.EnsureCreatedAsync();
 
-        //Seeding: Creating Player entity and item entity
-        var playerResult = Player.Create(Guid.NewGuid(), TimeProvider.System.GetUtcNow());
+        //Seeding: Creating User - Player entity and item entity
+
+        var emailResult = Email.Create("testUser@gmail.com");
+        var userResult = User.Create("testUser", emailResult.Value, "HashedPassword", SystemRoleNames.PlayerId);
+        var user = userResult.Value;
+
+        var playerResult = Player.Create(user.Id, TimeProvider.System.GetUtcNow());
         var player = playerResult.Value;
 
         var itemResult = Item.Create("Pozione Magica", "Una pozione magica di magia magica", 20, ItemType.Misc, "{}");
         var item = itemResult.Value;
 
         //Adding entities to DB
+        dbContext.Users.Add(user);
         dbContext.Players.Add(player);
         dbContext.Items.Add(item);
         await dbContext.SaveChangesAsync();

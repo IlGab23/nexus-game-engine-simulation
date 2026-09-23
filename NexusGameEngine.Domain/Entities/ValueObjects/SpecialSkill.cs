@@ -3,7 +3,7 @@ using NexusGameEngine.Domain.ResultPattern;
 
 namespace NexusGameEngine.Domain.Entities.ValueObjects;
 
-public readonly record struct SpecialSkill
+public sealed record SpecialSkill
 {
     public string Name { get; init; }
     public StatType TargetStat { get; init; }

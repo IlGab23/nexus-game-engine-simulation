@@ -22,6 +22,8 @@ public class UseItemHandler(IApplicationDbContext appDbContext, TimeProvider tim
         var invSlot = player.InventorySlots.FirstOrDefault(invS => invS.Id == request.InventorySlotId);
         if (invSlot is null) return Error.NotFound("UseItem.InventorySlotNotFound", "The player does not have that inventory slot");
 
+        if (invSlot.Item is null) return Error.NotFound("UseItem.ItemNotFound", "The item data is missing or corrupted");
+
         switch (invSlot.Item.ItemType)
         {
             case ItemType.Consumable:
@@ -50,8 +52,16 @@ public class UseItemHandler(IApplicationDbContext appDbContext, TimeProvider tim
     {
         if (consumablePayload is null) return Error.Validation("UseItem.InvalidPayload", "Cannot read item data");
 
-        if (consumablePayload.HealAmount.HasValue) player.Heal(consumablePayload.HealAmount.Value);
-        if (consumablePayload.StaminaAmount.HasValue) player.GainStamina((short)consumablePayload.StaminaAmount.Value, timeProvider.GetUtcNow());
+        if (consumablePayload.HealAmount.HasValue)
+        {
+            var healSuccess = player.Heal(consumablePayload.HealAmount.Value);
+            if (healSuccess.IsFailure) return healSuccess.ErrorList;
+        }
+        if (consumablePayload.StaminaAmount.HasValue)
+        {
+            var gStaminaResult = player.GainStamina((short)consumablePayload.StaminaAmount.Value, timeProvider.GetUtcNow());
+            if (gStaminaResult.IsFailure) return gStaminaResult.ErrorList;
+        }
 
         var removeResult = invSlot.RemoveQuantity(1);
         if (removeResult.IsFailure) return removeResult.ErrorList;

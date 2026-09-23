@@ -7,11 +7,15 @@ public record PlayerCooldown
     public string ActionId { get; init; }
     public DateTimeOffset ReadyAt { get; init; }
 
-    private PlayerCooldown(string actioId, DateTimeOffset readyAt)
+    private PlayerCooldown(string actionId, DateTimeOffset readyAt)
     {
-        ActionId = actioId;
+        ActionId = actionId;
         ReadyAt = readyAt;
     }
+
+#pragma warning disable CS8618
+    private PlayerCooldown() { }
+#pragma warning restore CS8618
 
     public static Result<PlayerCooldown> Create(string actionId, DateTimeOffset readyAt, DateTimeOffset currentTime)
     {

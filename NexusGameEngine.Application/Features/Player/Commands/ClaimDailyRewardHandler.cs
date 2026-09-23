@@ -1,4 +1,3 @@
-using System.Collections.Specialized;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NexusGameEngine.Application.Interfaces;
@@ -11,8 +10,7 @@ public class ClaimDailyRewardHandler(IApplicationDbContext appDbContext, TimePro
 {
     public async Task<Result<DailyRewardResponse>> Handle(ClaimDailyRewardCommand request, CancellationToken cancellationToken)
     {
-        var player = await appDbContext.Players.Include(p => p.Cooldowns)
-                                                .Include(p => p.InventorySlots)
+        var player = await appDbContext.Players.Include(p => p.InventorySlots)
                                                 .FirstOrDefaultAsync(p => p.Id == request.PlayerId, cancellationToken);
 
         if (player is null) return Error.NotFound("Player.NotFound", "The player does not exist");
@@ -64,7 +62,7 @@ public class ClaimDailyRewardHandler(IApplicationDbContext appDbContext, TimePro
 
     private async Task<Result<DailyRewardResponse>> GetItem(Domain.Entities.Player player, IApplicationDbContext appDbContext, CancellationToken cancellationToken)
     {
-        var item = await appDbContext.Items.OrderBy(i => Guid.NewGuid()).FirstOrDefaultAsync(cancellationToken);
+        var item = await appDbContext.Items.OrderBy(i => EF.Functions.Random()).FirstOrDefaultAsync(cancellationToken);
         if (item is null) return Error.NotFound("DailyRewardItem.NotFound", "An error occured trying to get the daily reward item");
         int amount = item.MaxStackQuantity > 1 ? 3 : 1;
 

@@ -4,7 +4,9 @@ using Microsoft.Extensions.Time.Testing;
 using Moq;
 using NexusGameEngine.Application.Features.Player.Commands;
 using NexusGameEngine.Application.Interfaces;
+using NexusGameEngine.Domain.Constants;
 using NexusGameEngine.Domain.Entities;
+using NexusGameEngine.Domain.Entities.ValueObjects;
 using NexusGameEngine.Domain.Enums;
 using NexusGameEngine.Infrastructure.Persistance;
 using Xunit;
@@ -35,7 +37,12 @@ public class ClaimDailyRewardHandlerTests
         var fakeTimeProvider = new FakeTimeProvider();
         var nowTime = fakeTimeProvider.GetUtcNow();
 
-        var player = Player.Create(Guid.NewGuid(), nowTime).Value;
+        var emailResult = Email.Create("testUser@gmail.com");
+        var userResult = User.Create("testUser", emailResult.Value, "HashedPassword", SystemRoleNames.PlayerId);
+        var user = userResult.Value;
+
+        var player = Player.Create(user.Id, nowTime).Value;
+        dbContext.Users.Add(user);
         dbContext.Players.Add(player);
         int beforePlayerMoney = player.Money;
 
@@ -75,7 +82,7 @@ public class ClaimDailyRewardHandlerTests
         finalMoney.Should().BeGreaterThan(afterSecondHandlerMoney);
 
 
-        var playerWithCooldowns = await dbContext.Players.Include(p => p.Cooldowns).FirstAsync();
+        var playerWithCooldowns = await dbContext.Players.FirstAsync();
         playerWithCooldowns.Cooldowns.Should().HaveCount(1);
     }
 
@@ -102,7 +109,12 @@ public class ClaimDailyRewardHandlerTests
         var fakeTimeProvider = new FakeTimeProvider();
         var nowTime = fakeTimeProvider.GetUtcNow();
 
-        var player = Player.Create(Guid.NewGuid(), nowTime).Value;
+        var emailResult = Email.Create("testUser@gmail.com");
+        var userResult = User.Create("testUser", emailResult.Value, "HashedPassword", SystemRoleNames.PlayerId);
+        var user = userResult.Value;
+        dbContext.Users.Add(user);
+
+        var player = Player.Create(user.Id, nowTime).Value;
         dbContext.Players.Add(player);
         int playerInvSlotCount = player.InventorySlots.Count;
 
@@ -147,7 +159,7 @@ public class ClaimDailyRewardHandlerTests
         afterSecondHandlerInvSlotCount.Should().Be(1);
         afterThirdHandlerInvSlotCount.Should().Be(2);
 
-        var playerWithCooldowns = await dbContext.Players.Include(p => p.Cooldowns).FirstAsync();
+        var playerWithCooldowns = await dbContext.Players.FirstAsync();
         playerWithCooldowns.Cooldowns.Should().HaveCount(1);
 
     }
