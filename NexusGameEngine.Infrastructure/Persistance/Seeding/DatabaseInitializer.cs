@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -93,6 +94,107 @@ public class DatabaseInitializer(ApplicationDbContext appDbContext, IPasswordHas
             await appDbContext.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Default admin user '{AdminUserName}' successfully created and assigned Admin role.", AdminUserName);
         }
+
+        await SeedMonsters(cancellationToken);
     }
 
+    private async Task SeedMonsters(CancellationToken cancellationToken)
+    {
+        List<MonsterTemplate> initialMonsters = new();
+
+        var slimeLoot = new
+        {
+            XP = 15,
+            Money = 5,
+            Drops = new[]{
+                new {ItemId = Guid.Empty, DropChance = 0.5f} //TODO: Change the id with a real id(adding more items if necessary)
+            }
+        };
+        string slimePayload = JsonSerializer.Serialize(slimeLoot);
+        var slime = MonsterTemplate.Create("Green Slime", 30, 5, 1.5f, slimePayload, false).Value;
+        initialMonsters.Add(slime);
+
+        var goblinLoot = new
+        {
+            XP = 30,
+            Money = 10,
+            Drops = new[]{
+                new {ItemId = Guid.Empty, DropChance = 0.5f} //TODO: Change the id with a real id(adding more items if necessary)
+            }
+        };
+        string goblinPayload = JsonSerializer.Serialize(goblinLoot);
+        var goblin = MonsterTemplate.Create("Goblin Predone", 60, 12, 2.0f, goblinPayload, false).Value;
+        initialMonsters.Add(goblin);
+
+        var wolfLoot = new
+        {
+            XP = 50,
+            Money = 23,
+            Drops = new[]{
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f} //TODO: Change the id with a real id(adding more items if necessary)
+            }
+        };
+        string wolfPayload = JsonSerializer.Serialize(wolfLoot);
+        var wolf = MonsterTemplate.Create("Lupo Crudele", 80, 18, 2.5f, wolfPayload, false).Value;
+        initialMonsters.Add(wolf);
+
+        var orcLoot = new
+        {
+            XP = 132,
+            Money = 64,
+            Drops = new[]{
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f} //TODO: Change the id with a real id(adding more items if necessary)
+            }
+        };
+        string orcPayload = JsonSerializer.Serialize(orcLoot);
+        var orc = MonsterTemplate.Create("Orco Guerriero", 250, 35, 3.0f, orcPayload, false).Value;
+        initialMonsters.Add(orc);
+
+        var specterLoot = new
+        {
+            XP = 84,
+            Money = 45,
+            Drops = new[]{
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f} //TODO: Change the id with a real id(adding more items if necessary)
+            }
+        };
+        string specterPayload = JsonSerializer.Serialize(specterLoot);
+        var specter = MonsterTemplate.Create("Spettro Minore", 45, 25, 10.0f, specterPayload, false).Value;
+        initialMonsters.Add(specter);
+
+        var bossLoot = new
+        {
+            XP = 1474,
+            Money = 2000,
+            Drops = new[]{
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f}, //TODO: Change the id with a real id(adding more items if necessary)
+                new {ItemId = Guid.Empty, DropChance = 0.5f} //TODO: Change the id with a real id(adding more items if necessary)
+            }
+        };
+        string bossPayload = JsonSerializer.Serialize(bossLoot);
+        var boss = MonsterTemplate.Create("Re dei Goblin (BOSS)", 1500, 60, 4.0f, bossPayload, true).Value;
+        initialMonsters.Add(boss);
+
+        var existingNames = await appDbContext.MonsterTemplates
+            .Select(m => m.Name)
+            .ToListAsync(cancellationToken);
+
+        var monstersToAdd = initialMonsters
+            .Where(m => !existingNames.Contains(m.Name))
+            .ToList();
+
+        if (monstersToAdd.Any())
+        {
+            await appDbContext.MonsterTemplates.AddRangeAsync(monstersToAdd, cancellationToken);
+            await appDbContext.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("{Count} new monsters successfully seeded into the database.", monstersToAdd.Count);
+        }
+    }
 }
