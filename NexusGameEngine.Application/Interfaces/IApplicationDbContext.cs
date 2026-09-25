@@ -6,6 +6,8 @@ public interface IApplicationDbContext
 {
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<SystemRole> SystemRoles { get; }
+    DbSet<MapZone> MapZones { get; }
+    DbSet<MonsterTemplate> MonsterTemplates { get; }
     DbSet<User> Users { get; }
     DbSet<Player> Players { get; }
     DbSet<Item> Items { get; }

@@ -14,6 +14,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<SystemRole> SystemRoles { get; set; }
+    public DbSet<MapZone> MapZones { get; set; }
+    public DbSet<MonsterTemplate> MonsterTemplates { get; set; }
     public DbSet<User> Users { get; set; }
 
     public DbSet<Player> Players { get; set; }
