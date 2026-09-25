@@ -40,6 +40,13 @@ public sealed class Player
 
     public bool IsAlive { get; private set; } = true;
 
+    public Guid? MapZoneId { get; private set; }
+    public MapZone MapZone { get; private set; } //Nav property
+
+    public Vector3 WorldPosition { get; private set; }
+    public DateTimeOffset LastMove { get; private set; }
+    public float BaseMovementSpeed { get; private set; } = 5.0f; //TODO: This prop will be edited in EPIC 5
+
     public SpecialSkill? ActiveSpecialSkill { get; private set; }
 
     private readonly List<InventorySlot> _inventorySlots = [];
@@ -302,6 +309,24 @@ public sealed class Player
         if (currentCooldown is not null) _cooldowns.Remove(currentCooldown);
 
         _cooldowns.Add(newCooldownResult.Value);
+
+        return true;
+    }
+
+    public Result<bool> MoveTo(Vector3 newPos, DateTimeOffset currentTime)
+    {
+        float distance = this.WorldPosition.CalculateDistance(newPos);
+
+        double elapsedSeconds = (currentTime - this.LastMove).TotalSeconds;
+
+        if (elapsedSeconds < 0) return Error.Conflict("Player.TimeHack", "The current time is older than the last move time");
+
+        double maxAllowedDistance = (elapsedSeconds + 1.0) * this.BaseMovementSpeed;
+
+        if (distance > maxAllowedDistance) return Error.Conflict("Player.SpeedHack", "Movement rejected: The player moved too fast or teleported");
+
+        this.WorldPosition = newPos;
+        this.LastMove = currentTime;
 
         return true;
     }

@@ -109,5 +109,6 @@ app.MapSystemEndpoints();
 app.MapAuthEndpoints();
 app.MapPlayerEndpoints();
 app.MapInventoryEndpoints();
+app.MapWorldEndpoints();
 
 app.Run();

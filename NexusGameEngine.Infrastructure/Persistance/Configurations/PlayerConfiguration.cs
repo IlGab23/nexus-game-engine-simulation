@@ -115,6 +115,22 @@ public class PlayerConfiguration : IEntityTypeConfiguration<Player>
             .IsRequired()
             .HasDefaultValue(true);
 
+        builder.HasOne(p => p.MapZone)
+            .WithMany()
+            .HasForeignKey(p => p.MapZoneId)
+            .IsRequired(false);
+
+        builder.ComplexProperty(p => p.WorldPosition, posBuilder =>
+        {
+            posBuilder.Property(v => v.X).HasColumnName("Pos_X").IsRequired();
+            posBuilder.Property(v => v.Y).HasColumnName("Pos_Y").IsRequired();
+            posBuilder.Property(v => v.Z).HasColumnName("Pos_Z").IsRequired();
+        });
+
+        builder.Property(p => p.LastMove)
+            .IsRequired();
+
+
         builder.ComplexProperty(p => p.ActiveSpecialSkill, skillBuilder =>
         {
             skillBuilder.IsRequired(false);
